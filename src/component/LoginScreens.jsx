@@ -15,8 +15,13 @@ const LoginScreen = () => {
   const [usernameError, setUsernameError] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add isSubmitting state
 
   const handleLogin = async () => {
+    if (isSubmitting) return; // Prevent multiple presses
+
+    setIsSubmitting(true); // Disable button
+
     let valid = true;
 
     if (!username) {
@@ -37,6 +42,7 @@ const LoginScreen = () => {
     }
 
     if (!valid) {
+      setIsSubmitting(false); // Enable button again
       return;
     }
 
@@ -45,15 +51,16 @@ const LoginScreen = () => {
       const storedPassword = await AsyncStorage.getItem('password');
 
       if (username === storedUsername && password === storedPassword) {
-        setIsLoggedIn(true); 
-      
-        navigation.navigate('DrawerNavigation'); 
+        setIsLoggedIn(true);
+        navigation.navigate('DrawerNavigation');
       } else {
         Alert.alert('Error', 'Invalid username or password or first you need to signup');
       }
     } catch (error) {
       console.error('Login failed:', error);
       Alert.alert('Error', 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false); // Enable button again
     }
   };
 
@@ -94,7 +101,11 @@ const LoginScreen = () => {
           <Text style={styles.errorText}>{passwordError}</Text>
         </View>
       ) : null}
-      <TouchableOpacity style={styles.touch} onPress={handleLogin}>
+      <TouchableOpacity
+        style={[styles.touch, isSubmitting && styles.touchDisabled]}
+        onPress={handleLogin}
+        disabled={isSubmitting}
+      >
         <Text style={styles.text}>Login</Text>
       </TouchableOpacity>
     </View>
@@ -113,6 +124,9 @@ const styles = StyleSheet.create({
     paddingVertical: '4%',
     backgroundColor: Colors.button,
     borderRadius: 10,
+  },
+  touchDisabled: {
+    opacity: 0.6, // Change opacity when button is disabled
   },
   text: {
     color: Colors.white,
